@@ -1,5 +1,5 @@
 import { User, UserRole, RosterEntry, Team, WorkLocation, ApprovalStatus, ClockRecord } from '../models/types';
-import { addDays, addHours, startOfWeek, format } from 'date-fns';
+import { addDays, addHours, startOfWeek, format, subDays } from 'date-fns';
 
 // Generate a random ID
 const generateId = (): string => Math.random().toString(36).substring(2, 9);
@@ -142,14 +142,66 @@ export const rosterEntries: RosterEntry[] = [
 
 // Mock clock records
 export const clockRecords: ClockRecord[] = [
-  // Some example clock records for Sarah Davis
+  // John Smith (Service Supervisor) clock records
+  {
+    id: generateId(),
+    userId: 'u1',
+    clockInTime: new Date(new Date().setHours(9, 2, 0, 0)),
+    clockOutTime: new Date(new Date().setHours(17, 15, 0, 0)),
+    isDateBack: false,
+  },
+  {
+    id: generateId(),
+    userId: 'u1',
+    clockInTime: new Date(subDays(new Date(), 1).setHours(8, 55, 0, 0)),
+    clockOutTime: new Date(subDays(new Date(), 1).setHours(17, 30, 0, 0)),
+    isDateBack: false,
+  },
+  {
+    id: generateId(),
+    userId: 'u1',
+    clockInTime: new Date(subDays(new Date(), 2).setHours(9, 0, 0, 0)),
+    clockOutTime: new Date(subDays(new Date(), 2).setHours(16, 45, 0, 0)),
+    isDateBack: false,
+  },
+  {
+    id: generateId(),
+    userId: 'u1',
+    clockInTime: new Date(subDays(new Date(), 3).setHours(9, 10, 0, 0)),
+    clockOutTime: new Date(subDays(new Date(), 3).setHours(17, 5, 0, 0)),
+    isDateBack: true, // Backdated entry example
+  },
+  {
+    id: generateId(),
+    userId: 'u1',
+    clockInTime: new Date(subDays(new Date(), 4).setHours(8, 50, 0, 0)),
+    clockOutTime: new Date(subDays(new Date(), 4).setHours(17, 0, 0, 0)),
+    isDateBack: false,
+  },
+  
+  // Emma Johnson (Team Leader) clock records
+  {
+    id: generateId(),
+    userId: 'u2',
+    clockInTime: new Date(new Date().setHours(8, 45, 0, 0)),
+    clockOutTime: new Date(new Date().setHours(17, 30, 0, 0)),
+    isDateBack: false,
+  },
+  
+  // Sarah Davis (Staff) clock records
   {
     id: generateId(),
     userId: 'u4',
-    clockInTime: new Date(new Date().setHours(9, 0, 0, 0)),
+    clockInTime: new Date(new Date().setHours(9, 5, 0, 0)),
+    isDateBack: false, // No clockOutTime means still clocked in
+  },
+  {
+    id: generateId(),
+    userId: 'u4',
+    clockInTime: new Date(subDays(new Date(), 1).setHours(9, 0, 0, 0)),
+    clockOutTime: new Date(subDays(new Date(), 1).setHours(17, 0, 0, 0)),
     isDateBack: false,
   },
-  // More clock records would be added in a real scenario
 ];
 
 // Helper function to convert roster entries to calendar events
