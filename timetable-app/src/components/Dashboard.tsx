@@ -50,6 +50,7 @@ import {
   CalendarMonth as CalendarMonthIcon
 } from '@mui/icons-material';
 import RosterCalendar from './RosterCalendar';
+import TeamRosterTable from './TeamRosterTable';
 import MyRoster from './MyRoster';
 import { users, rosterEntries, clockRecords } from '../data/mockData';
 import { UserRole, ApprovalStatus, ClockRecord } from '../models/types';
@@ -246,171 +247,197 @@ const Dashboard: React.FC = () => {
         </TabPanel>
         
         <TabPanel value={tabValue} index={1}>
-          <RosterCalendar />
+          <TeamRosterTable />
         </TabPanel>
         
         <TabPanel value={tabValue} index={2}>
-          <Paper elevation={3} sx={{ p: 2, height: 'auto', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h5">Clock In/Out</Typography>
+          <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <Typography variant="h5" gutterBottom>
+                Clock In / Clock Out
+              </Typography>
               
-              <Box>
-                {!isClockedIn ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4">
+                      {format(new Date(), 'EEEE')}
+                    </Typography>
+                    <Typography variant="h6">
+                      {format(new Date(), 'MMMM d, yyyy')}
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ textAlign: 'center', minWidth: 150 }}>
+                    <Typography variant="h3">
+                      {format(new Date(), 'HH:mm')}
+                    </Typography>
+                    <Typography variant="subtitle1">
+                      Current Time
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 4 }}>
+                {isClockedIn ? (
                   <Button 
                     variant="contained" 
-                    color="success" 
-                    sx={{ mr: 2 }}
+                    color="primary" 
+                    size="large"
+                    onClick={handleClockOut}
                     startIcon={<ClockIcon />}
-                    onClick={handleClockIn}
                   >
-                    Clock In
+                    Clock Out
                   </Button>
                 ) : (
                   <Button 
                     variant="contained" 
-                    color="error"
+                    color="primary" 
+                    size="large"
+                    onClick={handleClockIn}
                     startIcon={<ClockIcon />}
-                    onClick={handleClockOut}
                   >
-                    Clock Out
+                    Clock In
                   </Button>
                 )}
                 
                 <Button 
                   variant="outlined" 
+                  size="large"
+                  onClick={() => openBackdateDialog(isClockedIn ? 'out' : 'in')}
                   startIcon={<HistoryIcon />}
-                  onClick={() => openBackdateDialog('in')}
-                  sx={{ mr: 1 }}
                 >
-                  Backdate Clock In
-                </Button>
-                
-                <Button 
-                  variant="outlined" 
-                  startIcon={<HistoryIcon />}
-                  onClick={() => openBackdateDialog('out')}
-                >
-                  Backdate Clock Out
+                  Backdate Entry
                 </Button>
               </Box>
-            </Box>
-            
-            {isClockedIn && clockInTime && (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                <Typography variant="body1">
-                  You clocked in at {format(clockInTime, 'h:mm a')} on {format(clockInTime, 'EEEE, MMMM d, yyyy')}
-                </Typography>
-              </Alert>
-            )}
-            
-            <Box sx={{ bgcolor: 'background.paper', p: 2, borderRadius: 1, mb: 3 }}>
-              <Typography variant="h6">Today's Schedule</Typography>
-              {rosterEntries
-                .filter(entry => 
-                  entry.userId === currentUser.id && 
-                  format(entry.start, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-                )
-                .map(entry => (
-                  <Box key={entry.id} sx={{ mt: 2, p: 1, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                    <Typography variant="subtitle1">{entry.title}</Typography>
-                    <Typography variant="body2">
-                      {format(entry.start, 'h:mm a')} - {format(entry.end, 'h:mm a')}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Location:</strong> {entry.location}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Tasks:</strong> {entry.tasks}
-                    </Typography>
-                    <Chip 
-                      size="small" 
-                      sx={{ mt: 1 }}
-                      label={entry.status} 
-                      color={
-                        entry.status === ApprovalStatus.APPROVED ? "success" : 
-                        entry.status === ApprovalStatus.PENDING ? "warning" : "error"
-                      } 
-                    />
-                  </Box>
-                ))}
-              {rosterEntries
-                .filter(entry => 
-                  entry.userId === currentUser.id && 
-                  format(entry.start, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-                ).length === 0 && (
-                  <Typography variant="body1" sx={{ mt: 1, fontStyle: 'italic' }}>
-                    No scheduled tasks for today.
+              
+              {isClockedIn && clockInTime && (
+                <Alert severity="success" sx={{ mb: 3 }}>
+                  <Typography>
+                    You are currently clocked in. Clock-in time: {format(clockInTime, 'HH:mm')}
                   </Typography>
-                )}
-            </Box>
-            
-            <Typography variant="h6" sx={{ mb: 2 }}>Recent Clock Records</Typography>
-            
-            <TableContainer component={Paper} sx={{ mb: 2 }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Clock In</TableCell>
-                    <TableCell>Clock Out</TableCell>
-                    <TableCell>Duration</TableCell>
-                    <TableCell>Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {userClockRecords.length > 0 ? (
-                    userClockRecords.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell>{format(record.clockInTime, 'yyyy-MM-dd')}</TableCell>
-                        <TableCell>
-                          {format(record.clockInTime, 'h:mm a')}
-                          {record.isDateBack && (
-                            <Chip size="small" label="Backdated" color="warning" sx={{ ml: 1 }} />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {record.clockOutTime ? format(record.clockOutTime, 'h:mm a') : '-'}
-                        </TableCell>
-                        <TableCell>
-                          {record.clockOutTime 
-                            ? `${Math.round((record.clockOutTime.getTime() - record.clockInTime.getTime()) / (1000 * 60 * 60))} hrs` 
-                            : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            size="small" 
-                            label={record.clockOutTime ? "Completed" : "Active"} 
-                            color={record.clockOutTime ? "success" : "info"} 
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
+                </Alert>
+              )}
+              
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                Recent Activity
+              </Typography>
+              
+              <TableContainer component={Paper} variant="outlined" sx={{ flexGrow: 1 }}>
+                <Table>
+                  <TableHead>
                     <TableRow>
-                      <TableCell colSpan={5} align="center">No recent clock records</TableCell>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Clock In</TableCell>
+                      <TableCell>Clock Out</TableCell>
+                      <TableCell>Duration</TableCell>
+                      <TableCell>Status</TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {userClockRecords.slice(0, 5).map((record) => {
+                      // Calculate duration
+                      const durationInMs = record.clockOutTime 
+                        ? new Date(record.clockOutTime).getTime() - new Date(record.clockInTime).getTime() 
+                        : 0;
+                      const hours = Math.floor(durationInMs / (1000 * 60 * 60));
+                      const minutes = Math.floor((durationInMs % (1000 * 60 * 60)) / (1000 * 60));
+                      const durationStr = record.clockOutTime 
+                        ? `${hours}h ${minutes}m` 
+                        : 'In Progress';
+                      
+                      return (
+                        <TableRow key={record.id}>
+                          <TableCell>{format(new Date(record.clockInTime), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>
+                            {format(new Date(record.clockInTime), 'HH:mm')}
+                            {record.isDateBack && (
+                              <Chip size="small" label="Backdated" color="warning" sx={{ ml: 1 }} />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {record.clockOutTime 
+                              ? format(new Date(record.clockOutTime), 'HH:mm')
+                              : 'N/A'
+                            }
+                          </TableCell>
+                          <TableCell>{durationStr}</TableCell>
+                          <TableCell>
+                            {!record.clockOutTime ? (
+                              <Chip size="small" label="Active" color="success" />
+                            ) : (
+                              <Chip size="small" label="Complete" color="default" />
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
           </Paper>
         </TabPanel>
         
         {currentUser.role !== UserRole.STAFF && (
           <TabPanel value={tabValue} index={3}>
-            <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
-              <Typography variant="h5" sx={{ mb: 2 }}>Pending Approvals</Typography>
-              
-              <Typography variant="body1" sx={{ mb: 4 }}>
-                This is where team leaders and supervisors can review and approve roster submissions.
-                The full implementation will include a table of pending submissions with approve/reject actions.
+            <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
+              <Typography variant="h5" gutterBottom>
+                Approvals
               </Typography>
               
-              <Box sx={{ bgcolor: 'background.paper', p: 2, borderRadius: 1 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'warning.main' }}>
-                  You have {pendingApprovals} pending approval{pendingApprovals !== 1 ? 's' : ''}
-                </Typography>
-              </Box>
+              <TableContainer component={Paper} variant="outlined" sx={{ mt: 3 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Staff Name</TableCell>
+                      <TableCell>Entry</TableCell>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Time</TableCell>
+                      <TableCell>Location</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {rosterEntries
+                      .filter(entry => entry.status === ApprovalStatus.PENDING)
+                      .map((entry) => {
+                        const user = users.find(u => u.id === entry.userId);
+                        
+                        return (
+                          <TableRow key={entry.id}>
+                            <TableCell>{user?.name}</TableCell>
+                            <TableCell>{entry.title}</TableCell>
+                            <TableCell>{format(new Date(entry.start), 'MMM d, yyyy')}</TableCell>
+                            <TableCell>
+                              {format(new Date(entry.start), 'HH:mm')} - {format(new Date(entry.end), 'HH:mm')}
+                            </TableCell>
+                            <TableCell>{entry.location}</TableCell>
+                            <TableCell>
+                              <Chip 
+                                size="small" 
+                                label="Pending" 
+                                color="warning" 
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Stack direction="row" spacing={1}>
+                                <Button size="small" variant="contained" color="primary">
+                                  Approve
+                                </Button>
+                                <Button size="small" variant="outlined" color="error">
+                                  Reject
+                                </Button>
+                              </Stack>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Paper>
           </TabPanel>
         )}
@@ -419,24 +446,26 @@ const Dashboard: React.FC = () => {
       {/* Backdated Entry Dialog */}
       <Dialog open={backDateDialogOpen} onClose={() => setBackDateDialogOpen(false)}>
         <DialogTitle>
-          {clockInType === 'in' ? 'Backdate Clock In' : 'Backdate Clock Out'}
+          Backdated {clockInType === 'in' ? 'Clock-In' : 'Clock-Out'} Entry
         </DialogTitle>
         <DialogContent>
-          <Stack spacing={3} sx={{ mt: 1, width: '400px' }}>
+          <Box sx={{ mt: 2, minWidth: 300 }}>
             <DateTimePicker
-              label="Date and Time"
+              label="Select Date & Time"
               value={selectedDate}
               onChange={(newValue) => setSelectedDate(newValue)}
+              sx={{ width: '100%', mb: 3 }}
             />
             
             <TextField
-              label="Notes"
+              label="Notes (required)"
               multiline
               rows={3}
-              fullWidth
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Please provide a reason for the backdated entry"
+              fullWidth
+              sx={{ mb: 2 }}
+              placeholder="Please provide a reason for backdated entry"
             />
             
             <FormControlLabel
@@ -444,24 +473,18 @@ const Dashboard: React.FC = () => {
                 <Switch 
                   checked={isBackdated} 
                   onChange={(e) => setIsBackdated(e.target.checked)} 
-                  disabled
                 />
               }
               label="Mark as backdated entry"
             />
-            
-            <Alert severity="info">
-              Backdated entries must be approved by your supervisor and will be marked as such in the system.
-            </Alert>
-          </Stack>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setBackDateDialogOpen(false)}>Cancel</Button>
           <Button 
             onClick={submitBackdatedEntry} 
             variant="contained" 
-            color="primary"
-            disabled={!selectedDate || !notes}
+            disabled={!notes.trim()}
           >
             Submit
           </Button>

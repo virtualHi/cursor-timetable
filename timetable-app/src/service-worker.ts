@@ -70,7 +70,7 @@ registerRoute(
 // precache, in this case same-origin .png requests like those from in public/
 registerRoute(
   // Add in any other file extensions or routing criteria as needed.
-  ({ url }) => url.origin === self.location.origin && 
+  ({ url }: { url: URL }) => url.origin === self.location.origin && 
               (url.pathname.endsWith('.png') || 
                url.pathname.endsWith('.jpg') || 
                url.pathname.endsWith('.jpeg') || 
@@ -95,7 +95,7 @@ registerRoute(
 
 // Cache CSS, JS, and Web Worker requests with a Stale While Revalidate strategy
 registerRoute(
-  ({ request }) =>
+  ({ request }: { request: Request }) =>
     request.destination === 'style' ||
     request.destination === 'script' ||
     request.destination === 'worker',
@@ -115,7 +115,7 @@ registerRoute(
 
 // Use Network First for API calls
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/'),
+  ({ url }: { url: URL }) => url.pathname.startsWith('/api/'),
   new NetworkFirst({
     cacheName: 'api-responses',
     plugins: [
@@ -149,16 +149,17 @@ self.addEventListener('fetch', (event) => {
       fetch(event.request)
         .then(response => response)
         .catch(() => {
-          return caches.open('offline-cache').then((cache) => {
-            return cache.match('/offline.html').then(response => {
-              return response || new Response('Offline page not found', {
-                status: 503,
-                statusText: 'Service Unavailable'
-              });
+          return caches.open('offline-cache')
+            .then(cache => {
+              return cache.match('/offline.html')
+                .then(cachedResponse => {
+                  return cachedResponse || new Response('Offline content not found', {
+                    status: 503,
+                    statusText: 'Service Unavailable'
+                  });
+                });
             });
-          });
         })
     );
-    return;
   }
 }); 
